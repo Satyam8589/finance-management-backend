@@ -22,6 +22,13 @@ export const loginSchema = Joi.object({
   password: Joi.string().required(),
 });
 
+export const refreshSchema = Joi.object({
+  refreshToken: Joi.string().required().messages({
+    'string.empty': 'Refresh token cannot be empty',
+    'any.required': 'Refresh token is required',
+  }),
+});
+
 export const validate = (schema) => (req, res, next) => {
   const { error, value } = schema.validate(req.body, {
     abortEarly: false,

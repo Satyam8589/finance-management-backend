@@ -19,7 +19,10 @@ const authenticate = asyncHandler(async (req, res, next) => {
   try {
     decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
   } catch (err) {
-    return next(new AppError('Unauthorized: Invalid or expired token.', 401));
+    if (err.name === 'TokenExpiredError') {
+      return next(new AppError('Unauthorized: Access token expired. Please refresh your token.', 401));
+    }
+    return next(new AppError('Unauthorized: Invalid token.', 401));
   }
 
   const currentUser = await prisma.user.findFirst({
