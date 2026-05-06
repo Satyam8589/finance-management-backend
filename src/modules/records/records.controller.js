@@ -1,20 +1,29 @@
-import asyncHandler from "../../utils/asyncHandler.js"
+import asyncHandler from "../../utils/asyncHandler.js";
+import AppError from "../../utils/AppError.js";
 import { sendSuccess } from "../../utils/response.js";
 import { createRecord, getAllRecords, getRecordById, updateRecord, deleteRecord } from "./records.service.js";
 
 const createRecordController = asyncHandler(async (req, res) => {
-    const {amount, type, category, date, notes} = req.body;
-    const record = await createRecord(req.user.id, {amount, type, category, date, notes});
+    const { amount, type, category, date, notes, targetUserId } = req.body;
+    const assignedUserId = (req.user.role === 'admin' && targetUserId)
+        ? targetUserId
+        : req.user.id;
+
+    const record = await createRecord(assignedUserId, { amount, type, category, date, notes });
     sendSuccess(res, "Record created successfully", record, 201);
 });
     
 const getAllRecordsController = asyncHandler(async (req, res) => {
-  const { type, category, startDate, endDate } = req.query;
+  const { type, category, startDate, endDate, userId } = req.query;
 
   const filters = { type, category, startDate, endDate };
 
   if (req.user.role === 'viewer') {
     filters.userId = req.user.id;
+  } else if (req.user.role === 'analyst') {
+    if (userId) filters.userId = userId;
+  } else if (req.user.role === 'admin') {
+    if (userId) filters.userId = userId;
   }
 
   const records = await getAllRecords(filters);
@@ -24,6 +33,11 @@ const getAllRecordsController = asyncHandler(async (req, res) => {
 
 const getRecordByIdController = asyncHandler(async (req, res) => {
     const record = await getRecordById(req.params.id);
+
+    if (req.user.role === 'viewer' && record.userId !== req.user.id) {
+        throw new AppError('You do not have permission to view this record.', 403);
+    }
+
     sendSuccess(res, "Record fetched successfully", record, 200);
 });
 

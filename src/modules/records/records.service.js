@@ -3,6 +3,7 @@ import AppError from "../../utils/AppError.js";
 
 const recordSelect = {
   id: true,
+  userId: true,
   amount: true,
   type: true,
   category: true,

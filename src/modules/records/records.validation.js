@@ -13,6 +13,9 @@ export const createRecordSchema = Joi.object({
   category: Joi.string().required().trim().min(2).max(50),
   date: Joi.date().iso().optional().default(() => new Date()),
   notes: Joi.string().optional().allow('', null).max(255),
+  targetUserId: Joi.string().uuid().optional().messages({
+    'string.guid': 'targetUserId must be a valid UUID',
+  }),
 });
 
 export const updateRecordSchema = Joi.object({
